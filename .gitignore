@@ -1,6 +1,9 @@
 node_modules/
-.env
-dist/
-build/
-*.log
+npm-debug.log*
+venv/
 __pycache__/
+*.pyc
+*.pyo
+.env
+*.log
+.DS_Store
