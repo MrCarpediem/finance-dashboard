@@ -29,7 +29,37 @@ Client (React/Vite) → API Gateway (3001) → Microservices → PostgreSQL
 ## ✅ Prerequisites
 
 ```bash
-Docker 20.10+, Docker Compose 2.0+, Git
+Docker 20.10+, Docker Compose 2.0+, Git, Node 18+, Python 3.11+
+```
+
+## 🏷️ Release / Version
+
+- Version: 1.0.0
+- Release date: 2026-04-03
+- Changelog: initial multi-service bootstrap with API gateway
+
+## 🧩 Install Dependencies (Local)
+
+```bash
+# Root folder
+cd finance-dashboard
+
+# Frontend
+cd client && npm install
+
+# API gateway
+cd ../services/api-gateway && npm install
+
+# Auth service
+cd ../auth-service && npm install
+
+# Finance + analytics services
+cd ../../finance-service && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt
+cd ../analytics-service && python -m venv venv && source venv/bin/activate && pip install -r requirements.txt
+
+# Auth service database (Prisma)
+cd ../auth-service
+npx prisma migrate deploy
 ```
 
 ## 🚀 Quick Start
@@ -213,6 +243,39 @@ Auto-initialized via `infrastructure/postgres/init.sql`
 | CORS errors | Check API Gateway URL in frontend config |
 | Rate limiting blocked | Wait 15 minutes or check X-RateLimit-Reset header |
 | Port conflicts | `lsof -i :PORT` to find process using port |
+
+## ▶️ Manual local startup (no Docker)
+
+If Docker Compose is not working, run services manually in separate terminals or background processes:
+
+```bash
+# 1) Auth Service
+cd services/auth-service && npm run dev &
+
+# 2) API Gateway
+cd services/api-gateway && npm run dev &
+
+# 3) Finance Service
+cd services/finance-service && source venv/bin/activate && python run.py &
+
+# 4) Analytics Service
+cd services/analytics-service && source venv/bin/activate && python run.py &
+
+# 5) Frontend Client
+cd client && npm run dev
+```
+
+Or run as a single one-liner (same shell, separate pids):
+
+```bash
+(cd services/auth-service && npm run dev) &
+(cd services/api-gateway && npm run dev) &
+(cd services/finance-service && source venv/bin/activate && python run.py) &
+(cd services/analytics-service && source venv/bin/activate && python run.py) &
+cd client && npm run dev
+```
+
+> Note: Keep your PostgreSQL instance running and ensure each service has a valid `.env` configuration.
 
 ## 📊 HTTP Status Codes
 

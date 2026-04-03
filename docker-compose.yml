@@ -1,0 +1,114 @@
+services:
+
+  postgres:
+    image: postgres:15-alpine
+    container_name: finance_postgres
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: postgres
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./infrastructure/postgres/init.sql:/docker-entrypoint-initdb.d/init.sql
+    networks:
+      - finance_network
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  auth-service:
+    build: ./services/auth-service
+    container_name: finance_auth
+    ports:
+      - "4001:4001"
+    environment:
+      PORT: 4001
+      NODE_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@172.20.0.2:5432/auth_db
+      JWT_SECRET: your_super_secret_jwt_key_change_in_production
+      JWT_EXPIRES_IN: 15m
+      JWT_REFRESH_SECRET: your_refresh_secret_change_in_production
+      JWT_REFRESH_EXPIRES_IN: 7d
+      BCRYPT_ROUNDS: 12
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - finance_network
+
+  api-gateway:
+    build: ./services/api-gateway
+    container_name: finance_gateway
+    ports:
+      - "3001:3001"
+    environment:
+      PORT: 3001
+      NODE_ENV: production
+      JWT_SECRET: your_super_secret_jwt_key_change_in_production
+      AUTH_SERVICE_URL: http://auth-service:4001
+      FINANCE_SERVICE_URL: http://finance-service:4002
+      ANALYTICS_SERVICE_URL: http://analytics-service:4003
+    depends_on:
+      - auth-service
+      - finance-service
+      - analytics-service
+    restart: on-failure
+    networks:
+      - finance_network
+
+  finance-service:
+    build: ./services/finance-service
+    container_name: finance_finance
+    ports:
+      - "4002:4002"
+    environment:
+      PORT: 4002
+      FLASK_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@172.20.0.2:5432/finance_db
+      JWT_SECRET: your_super_secret_jwt_key_change_in_production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - finance_network
+
+  analytics-service:
+    build: ./services/analytics-service
+    container_name: finance_analytics
+    ports:
+      - "4003:4003"
+    environment:
+      PORT: 4003
+      FLASK_ENV: production
+      DATABASE_URL: postgresql://postgres:postgres@postgres:5432/finance_db
+      JWT_SECRET: your_super_secret_jwt_key_change_in_production
+    depends_on:
+      postgres:
+        condition: service_healthy
+    restart: on-failure
+    networks:
+      - finance_network
+
+  client:
+    build: ./client
+    container_name: finance_client
+    ports:
+      - "80:80"
+    depends_on:
+      - api-gateway
+    restart: on-failure
+    networks:
+      - finance_network
+
+networks:
+  finance_network:
+    driver: bridge
+
+volumes:
+  postgres_data:
