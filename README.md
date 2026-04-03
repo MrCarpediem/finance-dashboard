@@ -66,7 +66,7 @@ npx prisma migrate deploy
 
 ### 1. Clone & Navigate
 ```bash
-git clone <repo-url>
+git clone https://github.com/MrCarpediem/finance-dashboard
 cd finance-dashboard
 ```
 
