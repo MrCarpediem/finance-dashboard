@@ -12,6 +12,8 @@ RUN npx prisma generate
 
 COPY . .
 
+RUN chmod +x start.sh
+
 EXPOSE 4001
 
-CMD ["npm", "start"]
+CMD ["sh", "start.sh"]
