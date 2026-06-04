@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react'
+import { motion } from 'framer-motion'
 import api from '../api/axiosInstance'
 import { formatDate } from '../utils/formatCurrency'
-import Table  from '../components/ui/Table'
-import Button from '../components/ui/Button'
+import Table from '../components/ui/Table'
+import { Users as UsersIcon, ShieldCheck } from 'lucide-react'
 
 export default function Users() {
-  const [users,   setUsers]   = useState([])
+  const [users, setUsers] = useState([])
   const [loading, setLoading] = useState(true)
 
   const load = () => {
@@ -25,36 +26,70 @@ export default function Users() {
     load()
   }
 
-  const roleColor = { ADMIN: '#dc2626', ANALYST: '#7c3aed', VIEWER: '#16a34a' }
+  const roleConfig = {
+    ADMIN:   { bg: 'rgba(239,68,68,0.12)', color: '#f87171' },
+    ANALYST: { bg: 'rgba(139,92,246,0.12)', color: '#a78bfa' },
+    VIEWER:  { bg: 'rgba(16,185,129,0.12)', color: '#34d399' },
+  }
 
   const columns = [
-    { key: 'name',      label: 'Name' },
-    { key: 'email',     label: 'Email', render: (v) => <span style={{ color: '#64748b' }}>{v}</span> },
-    { key: 'role',      label: 'Role',  render: (v, row) => (
+    { key: 'name', label: 'Name', render: (v) => <span style={{ fontWeight: 600 }}>{v}</span> },
+    { key: 'email', label: 'Email', render: (v) => <span style={{ color: 'var(--text-muted)' }}>{v}</span> },
+    { key: 'role', label: 'Role', render: (v, row) => (
       <select value={v} onChange={e => changeRole(row.id, e.target.value)}
-        style={{ padding: '3px 8px', borderRadius: 6, border: '1px solid #e2e8f0',
-          color: roleColor[v], fontWeight: 600, fontSize: 12 }}>
+        style={{
+          padding: '4px 10px', borderRadius: 'var(--radius-sm)',
+          border: '1px solid var(--border)', background: roleConfig[v]?.bg || 'transparent',
+          color: roleConfig[v]?.color || 'var(--text-secondary)',
+          fontWeight: 700, fontSize: 11, cursor: 'pointer', textTransform: 'uppercase',
+        }}>
         <option value="ADMIN">ADMIN</option>
         <option value="ANALYST">ANALYST</option>
         <option value="VIEWER">VIEWER</option>
       </select>
     )},
-    { key: 'status',    label: 'Status', render: (v, row) => (
-      <button onClick={() => toggleStatus(row.id, v)} style={{
-        padding: '3px 12px', borderRadius: 20, fontSize: 11, fontWeight: 600, border: 'none', cursor: 'pointer',
-        background: v === 'ACTIVE' ? '#dcfce7' : '#fee2e2',
-        color:      v === 'ACTIVE' ? '#16a34a' : '#dc2626',
-      }}>{v}</button>
+    { key: 'status', label: 'Status', render: (v, row) => (
+      <motion.button
+        whileHover={{ scale: 1.05 }}
+        whileTap={{ scale: 0.95 }}
+        onClick={() => toggleStatus(row.id, v)}
+        style={{
+          padding: '4px 14px', borderRadius: 'var(--radius-full)', fontSize: 11, fontWeight: 700,
+          border: 'none', cursor: 'pointer', textTransform: 'uppercase', letterSpacing: '0.05em',
+          background: v === 'ACTIVE' ? 'rgba(16,185,129,0.12)' : 'rgba(239,68,68,0.12)',
+          color: v === 'ACTIVE' ? '#10b981' : '#ef4444',
+        }}
+      >{v}</motion.button>
     )},
-    { key: 'createdAt', label: 'Joined', render: (v) => formatDate(v) },
+    { key: 'createdAt', label: 'Joined', render: (v) => <span style={{ color: 'var(--text-muted)' }}>{formatDate(v)}</span> },
   ]
 
   return (
-    <div style={{ padding: 24 }}>
-      <h2 style={{ fontSize: 18, fontWeight: 600, marginBottom: 20 }}>User Management</h2>
-      <div style={{ background: '#fff', borderRadius: 12, overflow: 'hidden' }}>
-        <Table columns={columns} data={users} loading={loading} />
+    <div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 24 }}>
+        <div style={{
+          width: 44, height: 44, borderRadius: 'var(--radius-md)',
+          background: 'rgba(99,102,241,0.12)', display: 'flex',
+          alignItems: 'center', justifyContent: 'center',
+        }}>
+          <ShieldCheck size={22} style={{ color: '#6366f1' }} />
+        </div>
+        <div>
+          <h2 style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--font-heading)', marginBottom: 2 }}>User Management</h2>
+          <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Manage roles and access control</p>
+        </div>
       </div>
+
+      <motion.div
+        initial={{ opacity: 0, y: 10 }}
+        animate={{ opacity: 1, y: 0 }}
+        style={{
+          background: 'var(--bg-panel)', borderRadius: 'var(--radius-lg)',
+          overflow: 'hidden', border: '1px solid var(--border)',
+        }}
+      >
+        <Table columns={columns} data={users} loading={loading} />
+      </motion.div>
     </div>
   )
 }

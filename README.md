@@ -317,7 +317,7 @@ cd services/analytics-service && pip install -r requirements.txt
 
 ## 📄 License
 
-Copyright © 2026 Zorvyn. All rights reserved.
+Copyright © 2026 FinancePro. All rights reserved.
 
 ## 📞 Support
 

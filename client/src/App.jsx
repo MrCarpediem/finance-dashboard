@@ -1,6 +1,7 @@
 import { useEffect } from 'react'
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom'
 import { useDispatch } from 'react-redux'
+import { Toaster } from 'react-hot-toast'
 import { fetchMe, setInitialized } from './store/authSlice'
 import Navbar from './components/layout/Navbar'
 import Sidebar from './components/layout/Sidebar'
@@ -12,11 +13,11 @@ import Users from './pages/Users'
 
 function Layout({ children }) {
   return (
-    <div>
-      <Navbar />
-      <div style={{ display: 'flex' }}>
-        <Sidebar />
-        <main style={{ marginLeft: 220, flex: 1, minHeight: 'calc(100vh - 56px)' }}>
+    <div style={{ display: 'flex', minHeight: '100vh', background: 'var(--bg-app)' }}>
+      <Sidebar />
+      <div style={{ marginLeft: 'var(--sidebar-w)', flex: 1, display: 'flex', flexDirection: 'column' }}>
+        <Navbar />
+        <main style={{ flex: 1, padding: 32, overflow: 'auto' }}>
           {children}
         </main>
       </div>
@@ -37,26 +38,39 @@ export default function App() {
   }, [])
 
   return (
-    <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/" element={
-          <ProtectedRoute roles={['ADMIN', 'ANALYST']}>
-            <Layout><Dashboard /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/transactions" element={
-          <ProtectedRoute>
-            <Layout><Transactions /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="/users" element={
-          <ProtectedRoute roles={['ADMIN']}>
-            <Layout><Users /></Layout>
-          </ProtectedRoute>
-        } />
-        <Route path="*" element={<Navigate to="/login" />} />
-      </Routes>
-    </BrowserRouter>
+    <>
+      <Toaster
+        position="top-right"
+        toastOptions={{
+          style: {
+            background: 'var(--bg-panel)',
+            color: 'var(--text-primary)',
+            border: '1px solid var(--border)',
+            fontSize: 13,
+          },
+        }}
+      />
+      <BrowserRouter>
+        <Routes>
+          <Route path="/login" element={<Login />} />
+          <Route path="/" element={
+            <ProtectedRoute roles={['ADMIN', 'ANALYST']}>
+              <Layout><Dashboard /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/transactions" element={
+            <ProtectedRoute>
+              <Layout><Transactions /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="/users" element={
+            <ProtectedRoute roles={['ADMIN']}>
+              <Layout><Users /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<Navigate to="/login" />} />
+        </Routes>
+      </BrowserRouter>
+    </>
   )
 }

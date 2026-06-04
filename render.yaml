@@ -1,0 +1,94 @@
+services:
+  # ── API Gateway ──
+  - type: web
+    name: finance-api-gateway
+    env: node
+    region: oregon
+    buildCommand: "cd services/api-gateway && npm install"
+    startCommand: "cd services/api-gateway && npm start"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: AUTH_SERVICE_URL
+        fromService:
+          type: web
+          name: finance-auth-service
+          envVarKey: RENDER_INTERNAL_HOSTNAME
+      - key: FINANCE_SERVICE_URL
+        fromService:
+          type: web
+          name: finance-finance-service
+          envVarKey: RENDER_INTERNAL_HOSTNAME
+      - key: ANALYTICS_SERVICE_URL
+        fromService:
+          type: web
+          name: finance-analytics-service
+          envVarKey: RENDER_INTERNAL_HOSTNAME
+
+  # ── Auth Service ──
+  - type: web
+    name: finance-auth-service
+    env: node
+    region: oregon
+    buildCommand: "cd services/auth-service && npm install && npx prisma generate"
+    startCommand: "cd services/auth-service && npx prisma migrate deploy && npm start"
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: JWT_EXPIRES_IN
+        value: "15m"
+      - key: JWT_REFRESH_EXPIRES_IN
+        value: "7d"
+      - key: BCRYPT_ROUNDS
+        value: "12"
+      - key: DATABASE_URL
+        fromDatabase:
+          name: finance-postgres
+          property: connectionString
+
+  # ── Finance Service ──
+  - type: web
+    name: finance-finance-service
+    env: python
+    region: oregon
+    buildCommand: "cd services/finance-service && pip install -r requirements.txt"
+    startCommand: "cd services/finance-service && gunicorn -b 0.0.0.0:$PORT run:app"
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: finance-postgres
+          property: connectionString
+
+  # ── Analytics Service ──
+  - type: web
+    name: finance-analytics-service
+    env: python
+    region: oregon
+    buildCommand: "cd services/analytics-service && pip install -r requirements.txt"
+    startCommand: "cd services/analytics-service && gunicorn -b 0.0.0.0:$PORT run:app"
+    envVars:
+      - key: FLASK_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true
+      - key: DATABASE_URL
+        fromDatabase:
+          name: finance-postgres
+          property: connectionString
+
+databases:
+  - name: finance-postgres
+    region: oregon
+    plan: free
+    databaseName: finance_db
+    user: finance_admin

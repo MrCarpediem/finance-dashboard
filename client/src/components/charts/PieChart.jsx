@@ -1,16 +1,34 @@
-import { PieChart, Pie, Cell, Tooltip, Legend, ResponsiveContainer } from 'recharts'
+import { PieChart, Pie, Cell, Tooltip, ResponsiveContainer } from 'recharts'
 
-const COLORS = ['#2563eb','#16a34a','#dc2626','#d97706','#7c3aed','#0891b2']
+const COLORS = ['#6366f1','#10b981','#ef4444','#f59e0b','#8b5cf6','#0ea5e9','#f43f5e','#14b8a6']
+
+const CustomTooltip = ({ active, payload }) => {
+  if (!active || !payload?.[0]) return null
+  const d = payload[0]
+  return (
+    <div style={{
+      background: 'var(--bg-panel)', border: '1px solid var(--border)',
+      borderRadius: 'var(--radius-sm)', padding: '10px 14px', fontSize: 12,
+    }}>
+      <p style={{ fontWeight: 600, color: d.payload.fill, marginBottom: 2 }}>{d.name}</p>
+      <p style={{ color: 'var(--text-secondary)' }}>₹{d.value?.toLocaleString()}</p>
+    </div>
+  )
+}
 
 export default function CategoryPieChart({ data = [] }) {
   const pieData = data.map(d => ({ name: `${d.category} (${d.type})`, value: d.total }))
   return (
-    <ResponsiveContainer width="100%" height={260}>
+    <ResponsiveContainer width="100%" height={280}>
       <PieChart>
-        <Pie data={pieData} dataKey="value" nameKey="name" cx="50%" cy="50%" outerRadius={90} label={({ name, percent }) => `${name} ${(percent * 100).toFixed(0)}%`}>
+        <Pie
+          data={pieData} dataKey="value" nameKey="name"
+          cx="50%" cy="50%" innerRadius={60} outerRadius={100}
+          paddingAngle={3} strokeWidth={0}
+        >
           {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
         </Pie>
-        <Tooltip formatter={(v) => `₹${v.toLocaleString()}`} />
+        <Tooltip content={<CustomTooltip />} />
       </PieChart>
     </ResponsiveContainer>
   )
