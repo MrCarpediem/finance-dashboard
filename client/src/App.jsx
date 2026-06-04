@@ -10,6 +10,8 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import Transactions from './pages/Transactions'
 import Users from './pages/Users'
+import Settings from './pages/Settings'
+import NotFound from './pages/NotFound'
 
 function Layout({ children }) {
   return (
@@ -68,7 +70,12 @@ export default function App() {
               <Layout><Users /></Layout>
             </ProtectedRoute>
           } />
-          <Route path="*" element={<Navigate to="/login" />} />
+          <Route path="/settings" element={
+            <ProtectedRoute>
+              <Layout><Settings /></Layout>
+            </ProtectedRoute>
+          } />
+          <Route path="*" element={<NotFound />} />
         </Routes>
       </BrowserRouter>
     </>

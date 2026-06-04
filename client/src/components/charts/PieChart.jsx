@@ -7,11 +7,17 @@ const CustomTooltip = ({ active, payload }) => {
   const d = payload[0]
   return (
     <div style={{
-      background: 'var(--bg-panel)', border: '1px solid var(--border)',
-      borderRadius: 'var(--radius-sm)', padding: '10px 14px', fontSize: 12,
+      background: 'rgba(30, 41, 59, 0.9)', backdropFilter: 'blur(8px)',
+      border: '1px solid rgba(255,255,255,0.1)',
+      borderRadius: 'var(--radius-md)', padding: '12px 16px', fontSize: 13,
+      boxShadow: '0 10px 25px rgba(0,0,0,0.3)',
+      display: 'flex', alignItems: 'center', gap: 10
     }}>
-      <p style={{ fontWeight: 600, color: d.payload.fill, marginBottom: 2 }}>{d.name}</p>
-      <p style={{ color: 'var(--text-secondary)' }}>₹{d.value?.toLocaleString()}</p>
+      <div style={{ width: 12, height: 12, borderRadius: '50%', background: d.payload.fill, flexShrink: 0 }} />
+      <div>
+        <p style={{ fontWeight: 600, color: 'var(--text-primary)', marginBottom: 2 }}>{d.name}</p>
+        <p style={{ color: 'var(--text-secondary)' }}>₹{d.value?.toLocaleString()}</p>
+      </div>
     </div>
   )
 }
@@ -23,10 +29,10 @@ export default function CategoryPieChart({ data = [] }) {
       <PieChart>
         <Pie
           data={pieData} dataKey="value" nameKey="name"
-          cx="50%" cy="50%" innerRadius={60} outerRadius={100}
-          paddingAngle={3} strokeWidth={0}
+          cx="50%" cy="50%" innerRadius={70} outerRadius={100}
+          paddingAngle={5} stroke="none"
         >
-          {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} />)}
+          {pieData.map((_, i) => <Cell key={i} fill={COLORS[i % COLORS.length]} style={{ outline: 'none' }} />)}
         </Pie>
         <Tooltip content={<CustomTooltip />} />
       </PieChart>
