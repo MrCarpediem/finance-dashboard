@@ -1,4 +1,4 @@
-const API_URL = "http://localhost:3001/api";
+const API_URL = "https://api-gateway-3hat.onrender.com/api";
 
 async function login() {
     const res = await fetch(`${API_URL}/auth/login`, {

@@ -33,7 +33,7 @@ services:
     env: node
     region: oregon
     buildCommand: "cd services/auth-service && npm install && npx prisma generate"
-    startCommand: "cd services/auth-service && npx prisma migrate deploy && npm start"
+    startCommand: "cd services/auth-service && npx prisma migrate deploy && npm run seed && npm start"
     envVars:
       - key: NODE_ENV
         value: production
