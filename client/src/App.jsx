@@ -12,6 +12,7 @@ import Transactions from './pages/Transactions'
 import Users from './pages/Users'
 import Settings from './pages/Settings'
 import NotFound from './pages/NotFound'
+import Register from './pages/Register'
 
 function Layout({ children }) {
   return (
@@ -55,6 +56,7 @@ export default function App() {
       <BrowserRouter>
         <Routes>
           <Route path="/login" element={<Login />} />
+          <Route path="/register" element={<Register />} />
           <Route path="/" element={
             <ProtectedRoute roles={['ADMIN', 'ANALYST']}>
               <Layout><Dashboard /></Layout>
