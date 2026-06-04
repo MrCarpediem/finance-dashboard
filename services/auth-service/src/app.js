@@ -8,15 +8,20 @@ const userRoutes = require('./routes/user.routes')
 
 const app = express()
 
+// Trust proxy (needed for Render / cloud deployments behind reverse proxy)
+app.set('trust proxy', 1)
+
 // Middleware
 app.use(cors())
 app.use(express.json())
 app.use(morgan('dev'))
 
-// Rate limiting
+// Rate limiting — generous for portfolio demo
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
-  max: 100,
+  max: 1000,
+  standardHeaders: true,
+  legacyHeaders: false,
   message: { success: false, message: 'Too many requests, try again later.' },
 })
 app.use('/api/', limiter)
