@@ -1,9 +1,15 @@
 import { useState } from 'react'
 import { Link, useNavigate } from 'react-router-dom'
 import { motion } from 'framer-motion'
-import { Lock, Mail, ArrowRight, User } from 'lucide-react'
+import { Lock, Mail, ArrowRight, User, Shield } from 'lucide-react'
 import toast from 'react-hot-toast'
 import { register } from '../api/auth.api'
+
+const ROLES = [
+  { value: 'VIEWER', label: 'Viewer', desc: 'View transactions & reports', color: '#34d399' },
+  { value: 'ANALYST', label: 'Analyst', desc: 'View + Dashboard analytics', color: '#a78bfa' },
+  { value: 'ADMIN', label: 'Admin', desc: 'Full access + User management', color: '#f87171' },
+]
 
 export default function Register() {
   const navigate = useNavigate()
@@ -14,7 +20,8 @@ export default function Register() {
     name: '',
     email: '',
     password: '',
-    confirmPassword: ''
+    confirmPassword: '',
+    role: 'VIEWER',
   })
 
   const handle = async (e) => {
@@ -27,7 +34,7 @@ export default function Register() {
     setLoading(true)
     setError(null)
     try {
-      await register({ name: form.name, email: form.email, password: form.password })
+      await register({ name: form.name, email: form.email, password: form.password, role: form.role })
       toast.success('Registration successful! Please sign in.')
       navigate('/login')
     } catch (err) {
@@ -85,7 +92,7 @@ export default function Register() {
           </span>
         </div>
 
-        <p style={{ color: 'var(--text-muted)', marginBottom: 32, fontSize: 14, lineHeight: 1.6 }}>
+        <p style={{ color: 'var(--text-muted)', marginBottom: 28, fontSize: 14, lineHeight: 1.6 }}>
           Create a new account to get started
         </p>
 
@@ -104,7 +111,7 @@ export default function Register() {
         )}
 
         <form onSubmit={handle}>
-          <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 18 }}>
             <label className="input-label">
               <User size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
               Full Name
@@ -119,7 +126,7 @@ export default function Register() {
             />
           </div>
 
-          <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 18 }}>
             <label className="input-label">
               <Mail size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
               Email Address
@@ -134,7 +141,7 @@ export default function Register() {
             />
           </div>
 
-          <div style={{ marginBottom: 20 }}>
+          <div style={{ marginBottom: 18 }}>
             <label className="input-label">
               <Lock size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
               Password
@@ -149,7 +156,7 @@ export default function Register() {
             />
           </div>
 
-          <div style={{ marginBottom: 28 }}>
+          <div style={{ marginBottom: 18 }}>
             <label className="input-label">
               <Lock size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
               Confirm Password
@@ -162,6 +169,47 @@ export default function Register() {
               required
               placeholder="••••••••"
             />
+          </div>
+
+          {/* Role Selection */}
+          <div style={{ marginBottom: 24 }}>
+            <label className="input-label">
+              <Shield size={14} style={{ marginRight: 6, verticalAlign: 'middle' }} />
+              Select Role
+            </label>
+            <div style={{ display: 'flex', gap: 8, marginTop: 6 }}>
+              {ROLES.map(r => (
+                <motion.button
+                  key={r.value}
+                  type="button"
+                  whileHover={{ scale: 1.03 }}
+                  whileTap={{ scale: 0.97 }}
+                  onClick={() => setForm({ ...form, role: r.value })}
+                  style={{
+                    flex: 1, padding: '10px 8px', borderRadius: 'var(--radius-md)',
+                    background: form.role === r.value
+                      ? `${r.color}18`
+                      : 'rgba(255,255,255,0.03)',
+                    border: form.role === r.value
+                      ? `2px solid ${r.color}`
+                      : '2px solid var(--border)',
+                    cursor: 'pointer', transition: 'all 0.2s',
+                  }}
+                >
+                  <div style={{
+                    fontSize: 12, fontWeight: 700, color: form.role === r.value ? r.color : 'var(--text-secondary)',
+                    textTransform: 'uppercase', letterSpacing: '0.05em',
+                  }}>
+                    {r.label}
+                  </div>
+                  <div style={{
+                    fontSize: 10, color: 'var(--text-dim)', marginTop: 2, lineHeight: 1.3,
+                  }}>
+                    {r.desc}
+                  </div>
+                </motion.button>
+              ))}
+            </div>
           </div>
 
           <motion.button
