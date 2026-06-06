@@ -180,6 +180,21 @@ export default function Dashboard() {
     trends.length ? [...trends].reverse().map(t => t.expense || 0) : [8,10,14,11,16,13],
   [trends])
 
+  const changes = useMemo(() => {
+    if (!trends || trends.length < 2) return { income: 0, expense: 0, net: 0, transactions: 0 };
+    const current = trends[0];
+    const prev = trends[1];
+    
+    const calc = (c, p) => (p === 0 ? 0 : Number((((c - p) / Math.abs(p)) * 100).toFixed(1)));
+    
+    return {
+      income: calc(current.income, prev.income),
+      expense: calc(current.expense, prev.expense),
+      net: calc(current.net, prev.net),
+      transactions: calc(current.transaction_count || 0, prev.transaction_count || 0)
+    };
+  }, [trends]);
+
   return (
     <div>
       {/* Page Header */}
@@ -227,25 +242,25 @@ export default function Dashboard() {
             index={0} label="Total Income"
             value={summary?.total_income || 0}
             icon={TrendingUp} color="#10b981" bg="rgba(16,185,129,0.1)"
-            sparkData={incomeSparkData} change={12.5}
+            sparkData={incomeSparkData} change={changes.income}
           />
           <SummaryCard
             index={1} label="Total Expense"
             value={summary?.total_expense || 0}
             icon={TrendingDown} color="#ef4444" bg="rgba(239,68,68,0.1)"
-            sparkData={expenseSparkData} change={-3.2}
+            sparkData={expenseSparkData} change={changes.expense}
           />
           <SummaryCard
             index={2} label="Net Balance"
             value={summary?.net_balance || 0}
             icon={Wallet} color="#6366f1" bg="rgba(99,102,241,0.1)"
-            change={8.7}
+            change={changes.net}
           />
           <SummaryCard
             index={3} label="Transactions"
             value={summary?.total_transactions || 0}
             icon={Activity} color="#f59e0b" bg="rgba(245,158,11,0.1)"
-            change={5.1}
+            change={changes.transactions}
           />
         </div>
       )}

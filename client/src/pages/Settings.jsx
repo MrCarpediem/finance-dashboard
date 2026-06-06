@@ -1,12 +1,23 @@
 import { useState } from 'react'
 import { motion } from 'framer-motion'
-import { User, Bell, Shield, Palette, Save } from 'lucide-react'
+import { User, Bell, Shield, Palette, Save, Loader2 } from 'lucide-react'
 import Button from '../components/ui/Button'
-import { useSelector } from 'react-redux'
+import { useSelector, useDispatch } from 'react-redux'
+import toast from 'react-hot-toast'
 
 export default function Settings() {
   const { user } = useSelector(s => s.auth)
   const [activeTab, setActiveTab] = useState('profile')
+  const [saving, setSaving] = useState(false)
+  const [name, setName] = useState(user?.name || '')
+
+  const handleSave = () => {
+    setSaving(true)
+    setTimeout(() => {
+      setSaving(false)
+      toast.success('Settings saved successfully!')
+    }, 800)
+  }
 
   const tabs = [
     { id: 'profile', label: 'Profile', icon: User },
@@ -65,7 +76,7 @@ export default function Settings() {
               <div style={{ display: 'grid', gap: 20, maxWidth: 480 }}>
                 <div>
                   <label className="input-label">Full Name</label>
-                  <input className="input-field" defaultValue={user?.name || ''} />
+                  <input className="input-field" value={name} onChange={(e) => setName(e.target.value)} />
                 </div>
                 <div>
                   <label className="input-label">Email Address</label>
@@ -76,8 +87,9 @@ export default function Settings() {
                   <input className="input-field" defaultValue={user?.role || ''} disabled style={{ opacity: 0.6 }} />
                 </div>
                 <div style={{ marginTop: 12 }}>
-                  <Button style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <Save size={16} /> Save Changes
+                  <Button onClick={handleSave} disabled={saving} style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                    {saving ? <Loader2 size={16} style={{ animation: 'spin 1s linear infinite' }} /> : <Save size={16} />} 
+                    {saving ? 'Saving...' : 'Save Changes'}
                   </Button>
                 </div>
               </div>

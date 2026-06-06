@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
 import { useDispatch, useSelector } from 'react-redux'
 import { motion } from 'framer-motion'
-import { fetchTransactions, addTransaction, removeTransaction } from '../store/transactionSlice'
+import { fetchTransactions, addTransaction, updateTransaction, removeTransaction } from '../store/transactionSlice'
 import { useRole } from '../hooks/useRole'
 import { formatCurrency, formatDate } from '../utils/formatCurrency'
 import Table from '../components/ui/Table'
@@ -16,8 +16,9 @@ export default function Transactions() {
   const dispatch = useDispatch()
   const { list, loading, meta } = useSelector(s => s.transaction)
   const { canWrite } = useRole()
-  const [filters, setFilters] = useState({ type: '', category: '', page: 1, limit: 10 })
+  const [filters, setFilters] = useState({ type: '', category: '', date_from: '', date_to: '', page: 1, limit: 10 })
   const [modal, setModal] = useState(false)
+  const [editId, setEditId] = useState(null)
   const [form, setForm] = useState(EMPTY)
   const [errors, setErrors] = useState({})
   const [saving, setSaving] = useState(false)
@@ -30,14 +31,28 @@ export default function Transactions() {
   const submit = async (e) => {
     e.preventDefault()
     setSaving(true)
-    const res = await dispatch(addTransaction({ ...form, amount: parseFloat(form.amount) }))
+    const payload = { ...form, amount: parseFloat(form.amount) }
+    const action = editId ? updateTransaction({ id: editId, data: payload }) : addTransaction(payload)
+    const res = await dispatch(action)
     setSaving(false)
     if (res.meta.requestStatus === 'fulfilled') {
-      setModal(false); setForm(EMPTY); setErrors({})
-      toast.success('Transaction added')
+      setModal(false); setForm(EMPTY); setErrors({}); setEditId(null)
+      toast.success(editId ? 'Transaction updated' : 'Transaction added')
     } else {
       setErrors(res.payload?.errors || { general: res.payload?.message })
     }
+  }
+
+  const handleEdit = (row) => {
+    setEditId(row.id)
+    setForm({
+      amount: row.amount,
+      type: row.type,
+      category: row.category,
+      date: row.date.split('T')[0],
+      notes: row.notes || ''
+    })
+    setModal(true)
   }
 
   const handleDelete = async (id) => {
@@ -66,7 +81,12 @@ export default function Transactions() {
     { key: 'notes', label: 'Notes', render: (v) => <span style={{ color: 'var(--text-muted)' }}>{v || '—'}</span> },
     ...(canWrite ? [{
       key: 'id', label: 'Action',
-      render: (id) => <Button variant="danger" size="sm" onClick={() => handleDelete(id)}>Delete</Button>
+      render: (id, row) => (
+        <div style={{ display: 'flex', gap: 8 }}>
+          <Button variant="outline" size="sm" onClick={() => handleEdit(row)}>Edit</Button>
+          <Button variant="danger" size="sm" onClick={() => handleDelete(id)}>Delete</Button>
+        </div>
+      )
     }] : []),
   ]
 
@@ -78,7 +98,7 @@ export default function Transactions() {
           <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Manage your income and expenses</p>
         </div>
         {canWrite && (
-          <Button onClick={() => setModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+          <Button onClick={() => { setEditId(null); setForm(EMPTY); setModal(true) }} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
             <Plus size={16} /> Add Transaction
           </Button>
         )}
@@ -90,16 +110,23 @@ export default function Transactions() {
         display: 'flex', gap: 12, alignItems: 'center', border: '1px solid var(--border)', flexWrap: 'wrap',
       }}>
         <Filter size={16} style={{ color: 'var(--text-muted)' }} />
-        <select className="input-field" style={{ width: 160 }} value={filters.type}
+        <select className="input-field" style={{ width: 140 }} value={filters.type}
           onChange={e => setFilters({ ...filters, type: e.target.value, page: 1 })}>
           <option value="">All Types</option>
           <option value="income">Income</option>
           <option value="expense">Expense</option>
         </select>
-        <input className="input-field" style={{ width: 200 }} placeholder="Filter by category"
+        <input className="input-field" style={{ width: 160 }} placeholder="Filter by category"
           value={filters.category} onChange={e => setFilters({ ...filters, category: e.target.value, page: 1 })} />
-        {(filters.type || filters.category) && (
-          <Button variant="ghost" size="sm" onClick={() => setFilters({ type: '', category: '', page: 1, limit: 10 })}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <input className="input-field" type="date" style={{ width: 140 }}
+            value={filters.date_from} onChange={e => setFilters({ ...filters, date_from: e.target.value, page: 1 })} />
+          <span style={{ color: 'var(--text-muted)', fontSize: 13 }}>to</span>
+          <input className="input-field" type="date" style={{ width: 140 }}
+            value={filters.date_to} onChange={e => setFilters({ ...filters, date_to: e.target.value, page: 1 })} />
+        </div>
+        {(filters.type || filters.category || filters.date_from || filters.date_to) && (
+          <Button variant="ghost" size="sm" onClick={() => setFilters({ type: '', category: '', date_from: '', date_to: '', page: 1, limit: 10 })}>
             <X size={14} /> Clear
           </Button>
         )}
@@ -123,8 +150,8 @@ export default function Transactions() {
         )}
       </motion.div>
 
-      {/* Add Modal */}
-      <Modal open={modal} onClose={() => { setModal(false); setErrors({}) }} title="Add Transaction">
+      {/* Add/Edit Modal */}
+      <Modal open={modal} onClose={() => { setModal(false); setErrors({}); setEditId(null); setForm(EMPTY) }} title={editId ? "Edit Transaction" : "Add Transaction"}>
         {errors.general && <div style={{ color: 'var(--danger)', fontSize: 13, marginBottom: 12, padding: '8px 12px', background: 'var(--danger-bg)', borderRadius: 'var(--radius-sm)' }}>{errors.general}</div>}
         <form onSubmit={submit}>
           {[
@@ -147,7 +174,7 @@ export default function Transactions() {
               <option value="expense">Expense</option>
             </select>
           </div>
-          <Button style={{ width: '100%' }} disabled={saving}>{saving ? 'Saving...' : 'Add Transaction'}</Button>
+          <Button style={{ width: '100%' }} disabled={saving}>{saving ? 'Saving...' : (editId ? 'Update Transaction' : 'Add Transaction')}</Button>
         </form>
       </Modal>
     </div>

@@ -8,7 +8,8 @@ def get_monthly_trends():
             COALESCE(SUM(CASE WHEN type = 'income'  THEN amount ELSE 0 END), 0) AS income,
             COALESCE(SUM(CASE WHEN type = 'expense' THEN amount ELSE 0 END), 0) AS expense,
             COALESCE(SUM(CASE WHEN type = 'income'  THEN amount
-                              WHEN type = 'expense' THEN -amount END), 0) AS net
+                              WHEN type = 'expense' THEN -amount END), 0) AS net,
+            COUNT(*) AS transaction_count
         FROM transactions
         WHERE deleted_at IS NULL
         GROUP BY TO_CHAR(date, 'YYYY-MM')
@@ -22,6 +23,7 @@ def get_monthly_trends():
             "income":  float(r.income),
             "expense": float(r.expense),
             "net":     float(r.net),
+            "transaction_count": int(r.transaction_count)
         }
         for r in rows
     ]
