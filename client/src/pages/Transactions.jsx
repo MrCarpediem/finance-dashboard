@@ -7,7 +7,7 @@ import { formatCurrency, formatDate } from '../utils/formatCurrency'
 import Table from '../components/ui/Table'
 import Button from '../components/ui/Button'
 import Modal from '../components/ui/Modal'
-import { Plus, Filter, X, ChevronLeft, ChevronRight } from 'lucide-react'
+import { Plus, Filter, X, ChevronLeft, ChevronRight, Download } from 'lucide-react'
 import toast from 'react-hot-toast'
 
 const EMPTY = { amount: '', type: 'income', category: '', date: '', notes: '' }
@@ -55,6 +55,34 @@ export default function Transactions() {
     setModal(true)
   }
 
+  const handleExport = () => {
+    if (!list || list.length === 0) return toast.error('No data to export')
+    
+    const headers = ['Date', 'Type', 'Category', 'Amount', 'Notes']
+    const csvData = list.map(t => [
+      t.date.split('T')[0],
+      t.type,
+      t.category,
+      t.amount,
+      t.notes || ''
+    ])
+    
+    const csvContent = [
+      headers.join(','),
+      ...csvData.map(row => row.map(cell => `"${String(cell).replace(/"/g, '""')}"`).join(','))
+    ].join('\n')
+    
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' })
+    const url = URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.setAttribute('download', `transactions_export_${new Date().toISOString().split('T')[0]}.csv`)
+    document.body.appendChild(link)
+    link.click()
+    document.body.removeChild(link)
+    toast.success('Transactions exported successfully')
+  }
+
   const handleDelete = async (id) => {
     if (window.confirm('Delete this transaction?')) {
       await dispatch(removeTransaction(id))
@@ -97,11 +125,16 @@ export default function Transactions() {
           <h2 style={{ fontSize: 24, fontWeight: 700, fontFamily: 'var(--font-heading)', marginBottom: 4 }}>Transactions</h2>
           <p style={{ color: 'var(--text-muted)', fontSize: 14 }}>Manage your income and expenses</p>
         </div>
-        {canWrite && (
-          <Button onClick={() => { setEditId(null); setForm(EMPTY); setModal(true) }} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <Plus size={16} /> Add Transaction
+        <div style={{ display: 'flex', gap: 12 }}>
+          <Button variant="outline" onClick={handleExport} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+            <Download size={16} /> Export CSV
           </Button>
-        )}
+          {canWrite && (
+            <Button onClick={() => { setEditId(null); setForm(EMPTY); setModal(true) }} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
+              <Plus size={16} /> Add Transaction
+            </Button>
+          )}
+        </div>
       </div>
 
       {/* Filters */}
