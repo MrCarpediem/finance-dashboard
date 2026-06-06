@@ -9,7 +9,7 @@ const routes           = require('./routes')
 const app = express()
 
 // Trust proxy (needed for Render / cloud deployments behind reverse proxy)
-app.set('trust proxy', 1)
+app.set('trust proxy', true)
 
 app.use(cors({
   origin: [
